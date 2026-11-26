@@ -2,7 +2,7 @@
 
 A GTA V-style car radio for Spotify. Flip between the stations using the **official playlists published by Rockstar Games on Spotify**, or add any playlist as your own station.
 
-- **Radio wheel:** tap `Q` / `Tab` for the next station, hold it to open the wheel.
+- **Radio wheel:** tap `Q` / `Tab` for the next station; hold it to open the wheel and turn the dial with the mouse, scroll wheel or `←` / `→` (release to tune).
 - **Live stations:** each station starts at a random song and keeps "playing" while you're tuned away, so coming back drops you mid-song, like in the game.
 - **Play anywhere:** audio in the browser tab, or on any of your Spotify devices (phone, desktop app, speakers).
 - **Custom stations:** paste any Spotify playlist link.

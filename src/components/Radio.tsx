@@ -88,22 +88,43 @@ export function Radio() {
     const typing = () =>
       document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLSelectElement;
     let pressed = false;
+    const openHeldWheel = () => {
+      clearTimeout(holdTimer.current);
+      holdTimer.current = undefined;
+      // Start the wheel from wherever rapid taps had got to.
+      const from = tapTarget.current ?? currentIndexRef.current;
+      clearTimeout(tapTimer.current);
+      tapTarget.current = null;
+      highlightRef.current = from;
+      setHighlight(from);
+      wheelRef.current = "hold";
+      setWheel("hold");
+    };
     const down = (e: KeyboardEvent) => {
       if (typing() || managerOpen) return;
       if (e.key === "Escape") return setWheel("closed");
+
+      // While the wheel is open (or Q/Tab is held): ← / → turn the dial anticlockwise / clockwise.
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        if (pressed && wheelRef.current === "closed") openHeldWheel();
+        if (wheelRef.current === "closed") return;
+        e.preventDefault();
+        const n = slotsRef.current.length;
+        const next = (highlightRef.current + (e.key === "ArrowRight" ? 1 : -1) + n) % n;
+        highlightRef.current = next;
+        setHighlight(next);
+        return;
+      }
+      if (e.key === "Enter" && wheelRef.current === "sticky") {
+        e.preventDefault();
+        return pick(highlightRef.current);
+      }
+
       if (!isWheelKey(e)) return;
       e.preventDefault();
       if (e.repeat || pressed || wheelRef.current !== "closed") return;
       pressed = true;
-      holdTimer.current = setTimeout(() => {
-        holdTimer.current = undefined;
-        // Start the wheel from wherever rapid taps had got to.
-        const from = tapTarget.current ?? currentIndexRef.current;
-        clearTimeout(tapTimer.current);
-        tapTarget.current = null;
-        setHighlight(from);
-        setWheel("hold");
-      }, HOLD_MS);
+      holdTimer.current = setTimeout(openHeldWheel, HOLD_MS);
     };
     const up = (e: KeyboardEvent) => {
       if (!isWheelKey(e) || !pressed) return;
@@ -213,8 +234,10 @@ export function Radio() {
           ) : (
             <div className="text-white/50">
               Tap <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-white">Q</kbd> /{" "}
-              <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-white">Tab</kbd> for the next station, hold it for the
-              radio wheel, or click the disc.
+              <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-white">Tab</kbd> for the next station, or hold it for the
+              radio wheel and turn it with the mouse or{" "}
+              <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-white">←</kbd>{" "}
+              <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-white">→</kbd>.
             </div>
           )}
         </div>
