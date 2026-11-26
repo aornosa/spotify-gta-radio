@@ -20,7 +20,13 @@ export async function getAccessToken(force = false): Promise<string> {
       });
       if (res.status === 401) {
         // Session gone or outdated (cookies were cleared server-side): back to the login screen.
-        if (typeof window !== "undefined" && window.location.pathname === "/") window.location.reload();
+        if (typeof window !== "undefined" && window.location.pathname === "/") {
+          const last = Number(sessionStorage.getItem("gta-radio:reloaded-at") ?? 0);
+          if (Date.now() - last > 30_000) {
+            sessionStorage.setItem("gta-radio:reloaded-at", String(Date.now()));
+            window.location.reload();
+          }
+        }
         throw new NotAuthenticatedError("Not logged in");
       }
       if (!res.ok) throw new Error(`Token endpoint failed: ${res.status}`);

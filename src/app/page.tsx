@@ -22,7 +22,7 @@ async function Gate({ searchParams }: PageProps<"/">) {
   if (loggedIn) return <Radio />;
 
   const { auth_error } = await searchParams;
-  const error = typeof auth_error === "string" ? (AUTH_ERRORS[auth_error] ?? `Login failed (${auth_error}).`) : null;
+  const error = typeof auth_error === "string" ? (AUTH_ERRORS[auth_error] ?? "Login failed. Please try again.") : null;
 
   return (
     <main className="relative flex min-h-dvh flex-col items-center justify-center gap-8 overflow-hidden px-6 text-center">

@@ -72,7 +72,10 @@ export function refreshAccessToken(refreshToken: string) {
   return tokenRequest({ grant_type: "refresh_token", refresh_token: refreshToken });
 }
 
-const secure = process.env.NODE_ENV === "production";
+/** Secure cookies everywhere except a local http:// run (e.g. the start-windows.bat launcher). */
+export const secureCookies =
+  process.env.NODE_ENV === "production" && !process.env.SPOTIFY_REDIRECT_URI?.startsWith("http://");
+const secure = secureCookies;
 const base = { httpOnly: true, secure, sameSite: "lax" as const, path: "/" };
 
 /** Persist tokens in httpOnly cookies. Must be called from a Route Handler. */

@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse, connection, type NextRequest } from "next/server";
-import { COOKIE, SCOPES, env, redirectUriFor } from "@/lib/spotify/server";
+import { COOKIE, SCOPES, env, redirectUriFor, secureCookies } from "@/lib/spotify/server";
 
 export async function GET(req: NextRequest) {
   await connection(); // per-request: never prerender (state must be unique)
@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   const state = randomBytes(16).toString("hex");
   (await cookies()).set(COOKIE.state, state, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: secureCookies,
     sameSite: "lax",
     path: "/",
     maxAge: 600,

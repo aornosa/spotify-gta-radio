@@ -13,7 +13,7 @@ if errorlevel 1 (
 
 if not exist node_modules (
   echo Installing, this only happens the first time...
-  call npm install --no-audit --no-fund || goto :fail
+  call npm ci --no-audit --no-fund || goto :fail
 )
 
 if not exist .env.local (

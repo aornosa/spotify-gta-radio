@@ -8,7 +8,7 @@ if ! command -v node >/dev/null 2>&1; then
   exit 1
 fi
 
-[ -d node_modules ] || { echo "Installing, this only happens the first time..."; npm install --no-audit --no-fund; }
+[ -d node_modules ] || { echo "Installing, this only happens the first time..."; npm ci --no-audit --no-fund; }
 [ -f .env.local ] || npm run setup
 [ -f .next/BUILD_ID ] || { echo "Building the app, this only happens the first time..."; npm run build; }
 
