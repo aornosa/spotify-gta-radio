@@ -81,4 +81,4 @@ Built with Next.js, TypeScript and Tailwind CSS, using the Spotify Web API and W
 
 ---
 
-<sub>**PSA:** AI tools were used in making this project, mainly for the frontend UI/UX.</sub>
+<sub>**PSA:** AI tools were used in making this project, mainly for the frontend UI/UX and for security auditing.</sub>
