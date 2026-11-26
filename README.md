@@ -4,7 +4,7 @@
 
 A GTA V-style car radio for Spotify. Flip between the stations using the **official playlists published by Rockstar Games on Spotify**, or turn any Spotify playlist into your own station.
 
-**Live site:** <https://spotify-gta-radio.vercel.app> · **Requires Spotify Premium**
+**Requires Spotify Premium.** Run it on your own computer or deploy your own copy; see [Run your own copy](#run-your-own-copy-about-5-minutes-free).
 
 ---
 
@@ -38,9 +38,9 @@ Click the **Audio output** button at the bottom right of the player. Its icon sh
 
 ---
 
-## Who can use the hosted site?
+## Spotify's user limits
 
-Spotify's rules for hobby apps limit who can use any single copy of this radio:
+Spotify's rules for hobby apps limit who can use any single deployed copy of this radio:
 
 | Limit | Value | Notes |
 | --- | --- | --- |
@@ -51,7 +51,7 @@ Spotify's rules for hobby apps limit who can use any single copy of this radio:
 
 Getting past the 5-user limit requires Spotify's "extended quota", which Spotify only grants to registered organizations with a large existing user base. A fan project can't get it.
 
-**When the hosted site is full:** if your Spotify account isn't one of the 5 the owner added, Spotify still lets you through the login but rejects every request afterwards. The site detects this right after login and shows a **"This radio is full"** screen pointing you to the setup guide below. Nothing on your Spotify account is changed.
+**When a copy is full:** if your Spotify account isn't one of the 5 the owner added, Spotify still lets you through the login but rejects every request afterwards. The app detects this right after login and shows a **"This radio is full"** screen pointing you to the setup guide below. Nothing on your Spotify account is changed.
 
 The owner adds and removes listeners by hand. Spotify offers no way for an app to manage its user list automatically, so inactive users can't be removed on a schedule.
 
@@ -61,7 +61,7 @@ The owner adds and removes listeners by hand. Spotify offers no way for an app t
 
 ## Run your own copy (about 5 minutes, free)
 
-Running your own copy makes you the owner of your own Spotify app, so the 5-user limit doesn't get in your way. Your keys stay on your computer. The same steps are on the site at **[/guide](https://spotify-gta-radio.vercel.app/guide)**.
+Running your own copy makes you the owner of your own Spotify app, so the 5-user limit doesn't get in your way. Your keys stay on your computer. The same steps are built into the app at **`/guide`**.
 
 ### 1. Create a Spotify app key
 
