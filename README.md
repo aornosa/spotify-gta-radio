@@ -78,3 +78,7 @@ npm run lint
 Built with Next.js, TypeScript and Tailwind CSS, using the Spotify Web API and Web Playback SDK.
 
 `scripts/fetch-rockstar-playlists.mjs` lists the official playlists on the Rockstar Games Spotify account. Spotify no longer lets apps read the songs of playlists they don't own, so stations remember upcoming songs from the player's queue instead.
+
+---
+
+<sub>**PSA:** AI tools were used in making this project, mainly for the frontend UI/UX.</sub>
