@@ -46,6 +46,9 @@ async function Gate({ searchParams }: PageProps<"/">) {
       <p className="max-w-sm text-xs text-white/50">
         Requires Spotify Premium. Fan project, not affiliated with Rockstar Games or Spotify.
       </p>
+      <a href="/guide" className="text-sm text-white/70 underline-offset-2 hover:text-white hover:underline">
+        Can&apos;t log in? Run your own copy in 5 minutes →
+      </a>
     </main>
   );
 }
