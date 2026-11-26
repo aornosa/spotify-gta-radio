@@ -52,8 +52,8 @@ export function whereIsStationNow(snap: StationSnapshot, now: number): TuneTarge
   return { kind: "fresh" };
 }
 
-/** Random starting position for a fresh tune-in: somewhere in the first ~60% of the song. */
+/** Random starting position for a fresh tune-in: somewhere in the first 80% of the song. */
 export function randomStartPosition(durationMs: number, rand: () => number = Math.random): number {
   if (durationMs <= MIN_REMAINING_MS * 2) return 0;
-  return Math.floor(rand() * durationMs * 0.6);
+  return Math.floor(rand() * durationMs * 0.8);
 }

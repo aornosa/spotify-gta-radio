@@ -54,8 +54,9 @@ describe("whereIsStationNow", () => {
 });
 
 describe("randomStartPosition", () => {
-  it("stays within the first 60% of the song", () => {
-    expect(randomStartPosition(200_000, () => 0.999)).toBeLessThan(120_000);
+  it("stays within the first 80% of the song", () => {
+    expect(randomStartPosition(200_000, () => 0.999)).toBeLessThan(160_000);
+    expect(randomStartPosition(200_000, () => 0.999)).toBeGreaterThan(150_000);
     expect(randomStartPosition(200_000, () => 0)).toBe(0);
   });
   it("starts very short songs at 0", () => {
