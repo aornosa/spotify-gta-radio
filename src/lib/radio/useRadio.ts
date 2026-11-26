@@ -23,6 +23,8 @@ const KEYS = {
 };
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const setShuffle = (state: boolean, device_id?: string) =>
+  spotify("/me/player/shuffle", { method: "PUT", query: { state: String(state), device_id } }).catch(() => {});
 const contextUriOf = (s: Station) => `spotify:playlist:${s.playlistId}`;
 
 interface QueueResponse {
@@ -56,7 +58,14 @@ export function useRadio() {
   const tuneSeq = useRef(0);
   const pendingSeek = useRef<{ seq: number; contextUri: string; after: number } | null>(null);
   /** After resuming a station: where the song should be, to correct Spotify if it starts elsewhere. */
-  const pendingResume = useRef<{ trackUri: string; positionMs: number; at: number } | null>(null);
+  const pendingResume = useRef<{
+    trackUri: string;
+    positionMs: number;
+    at: number;
+    contextUri: string;
+    deviceId: string;
+    retried: boolean;
+  } | null>(null);
   const lastState = useRef<NowPlaying | null>(null);
   const queueTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const snapshots = useRef<Record<string, StationSnapshot>>({});
@@ -111,6 +120,20 @@ export function useRadio() {
 
       // Resumed station: if Spotify started the song somewhere else (e.g. from 0), seek to where it should be.
       const r = pendingResume.current;
+      if (r && s.contextUri === r.contextUri && s.trackUri !== r.trackUri && !r.retried) {
+        // Spotify ignored the requested song (it does this while shuffle is on): turn shuffle off, ask again.
+        r.retried = true;
+        const expected = Math.round(r.positionMs + (Date.now() - r.at));
+        void (async () => {
+          await setShuffle(false, r.deviceId);
+          await spotify("/me/player/play", {
+            method: "PUT",
+            query: { device_id: r.deviceId },
+            body: JSON.stringify({ context_uri: r.contextUri, offset: { uri: r.trackUri }, position_ms: expected }),
+          }).catch(() => {});
+        })();
+        return;
+      }
       if (r && s.trackUri === r.trackUri) {
         pendingResume.current = null;
         const expected = r.positionMs + (Date.now() - r.at);
@@ -207,6 +230,8 @@ export function useRadio() {
         let resumed = false;
         if (target.kind === "resume") {
           try {
+            // Spotify ignores "start at this song" while shuffle is on.
+            await setShuffle(false, device_id);
             await spotify("/me/player/play", {
               method: "PUT",
               query: { device_id },
@@ -217,10 +242,17 @@ export function useRadio() {
               }),
             });
             resumed = true;
-            pendingResume.current = { trackUri: target.trackUri, positionMs: target.positionMs, at: Date.now() };
+            pendingResume.current = {
+              trackUri: target.trackUri,
+              positionMs: target.positionMs,
+              at: Date.now(),
+              contextUri: context_uri,
+              deviceId: device_id,
+              retried: false,
+            };
             setTimeout(() => {
               if (pendingResume.current?.trackUri === target.trackUri) pendingResume.current = null;
-            }, 6000);
+            }, 8000);
           } catch (e) {
             // The song may have left the playlist; anything else is a real error.
             if (!(e instanceof SpotifyError) || ![400, 404].includes(e.status)) throw e;
@@ -235,8 +267,12 @@ export function useRadio() {
           await spotify("/me/player/play", { method: "PUT", query: { device_id }, body: JSON.stringify({ context_uri }) });
           await sleep(400);
           if (stale()) return;
-          await spotify("/me/player/shuffle", { method: "PUT", query: { state: "true", device_id } });
+          await setShuffle(true, device_id);
           await spotify("/me/player/next", { method: "POST", query: { device_id } });
+          // Shuffle was only needed to land on a random song; from here the station plays in
+          // playlist order, so the queue we record stays valid and resuming by song works.
+          await sleep(300);
+          await setShuffle(false, device_id);
           pendingSeek.current = { seq, contextUri: context_uri, after: Date.now() };
           // Safety net: never leave the in-browser player muted.
           setTimeout(() => {

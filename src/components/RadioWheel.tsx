@@ -23,6 +23,8 @@ const RING = 0.4;
 
 export function RadioWheel({ slots, highlight, currentId, nowLine, onHover, onPick, onDismiss }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  /** Last real pointer position; Chrome fires "moves" when the layout changes under a still cursor. */
+  const lastPointer = useRef<{ x: number; y: number } | null>(null);
   const n = slots.length;
   const step = 360 / n;
   // Spread the badges evenly around the whole ring: size them from the gap between neighbours.
@@ -65,6 +67,15 @@ export function RadioWheel({ slots, highlight, currentId, nowLine, onHover, onPi
         aria-label="Radio stations"
         className="relative aspect-square w-[min(96vw,94dvh)] select-none touch-none"
         onPointerMove={(e) => {
+          // Compare with the last position we acted on: synthetic events (same spot) are ignored,
+          // while slow real movement still adds up past the threshold.
+          const last = lastPointer.current;
+          if (!last) {
+            lastPointer.current = { x: e.clientX, y: e.clientY };
+            return;
+          }
+          if (Math.hypot(e.clientX - last.x, e.clientY - last.y) < 3) return;
+          lastPointer.current = { x: e.clientX, y: e.clientY };
           const i = indexFromPointer(e.clientX, e.clientY);
           if (i !== null) onHover(i);
         }}
@@ -91,7 +102,6 @@ export function RadioWheel({ slots, highlight, currentId, nowLine, onHover, onPi
               role="option"
               aria-selected={active}
               aria-label={slot?.name ?? "Radio off"}
-              onPointerEnter={() => onHover(i)}
               onClick={() => onPick(i)}
               className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full transition-[transform,opacity] duration-100 ${
                 active ? "z-10 scale-[1.18] opacity-100" : "scale-100 opacity-75 hover:opacity-100"
