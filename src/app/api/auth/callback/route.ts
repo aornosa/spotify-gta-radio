@@ -17,7 +17,15 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    await saveTokens(await exchangeCode(code, redirectUriFor(req.nextUrl.origin)));
+    const tokens = await exchangeCode(code, redirectUriFor(req.nextUrl.origin));
+    // Development-mode Spotify apps only serve allowlisted users (max 5 per app). Anyone else
+    // can complete the login, but every API call returns 403, so check once and explain.
+    const me = await fetch("https://api.spotify.com/v1/me", {
+      headers: { Authorization: `Bearer ${tokens.access_token}` },
+      cache: "no-store",
+    });
+    if (me.status === 403) return NextResponse.redirect(new URL("/full", req.nextUrl.origin));
+    await saveTokens(tokens);
   } catch (e) {
     console.error(e);
     home.searchParams.set("auth_error", "token_exchange_failed");
