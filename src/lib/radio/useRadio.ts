@@ -55,6 +55,9 @@ export function useRadio() {
   const volumeRef = useRef(volume);
   const tuneSeq = useRef(0);
   const pendingSeek = useRef<{ seq: number; contextUri: string; after: number } | null>(null);
+  /** After resuming a station: where the song should be, to correct Spotify if it starts elsewhere. */
+  const pendingResume = useRef<{ trackUri: string; positionMs: number; at: number } | null>(null);
+  const lastState = useRef<NowPlaying | null>(null);
   const queueTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const snapshots = useRef<Record<string, StationSnapshot>>({});
 
@@ -102,13 +105,26 @@ export function useRadio() {
   const handleState = useCallback(
     (s: NowPlaying | null) => {
       setNowPlaying(s);
+      lastState.current = s;
       const station = currentStation();
       if (!s || !station || s.contextUri !== contextUriOf(station)) return;
+
+      // Resumed station: if Spotify started the song somewhere else (e.g. from 0), seek to where it should be.
+      const r = pendingResume.current;
+      if (r && s.trackUri === r.trackUri) {
+        pendingResume.current = null;
+        const expected = r.positionMs + (Date.now() - r.at);
+        if (Math.abs(s.positionMs - expected) > 4000 && expected < s.durationMs - 5000) {
+          void spotify("/me/player/seek", { method: "PUT", query: { position_ms: String(Math.round(expected)) } }).catch(() => {});
+          return;
+        }
+      }
 
       // Fresh tune-in: once the shuffled song has started, jump to a random point in it.
       const p = pendingSeek.current;
       if (p && p.contextUri === s.contextUri && s.at >= p.after && s.durationMs > 0) {
         pendingSeek.current = null;
+      pendingResume.current = null;
         const pos = randomStartPosition(s.durationMs);
         void (async () => {
           try {
@@ -162,6 +178,16 @@ export function useRadio() {
     async (station: Station) => {
       const adapter = adapterRef.current;
       if (!adapter) return;
+      // Already tuned in and playing this station: nothing to do (don't restart the song).
+      const now = lastState.current;
+      if (
+        currentRef.current === station.id &&
+        now &&
+        !now.paused &&
+        now.contextUri === contextUriOf(station)
+      ) {
+        return;
+      }
       const seq = ++tuneSeq.current;
       const stale = () => seq !== tuneSeq.current;
       currentRef.current = station.id;
@@ -191,6 +217,10 @@ export function useRadio() {
               }),
             });
             resumed = true;
+            pendingResume.current = { trackUri: target.trackUri, positionMs: target.positionMs, at: Date.now() };
+            setTimeout(() => {
+              if (pendingResume.current?.trackUri === target.trackUri) pendingResume.current = null;
+            }, 6000);
           } catch (e) {
             // The song may have left the playlist; anything else is a real error.
             if (!(e instanceof SpotifyError) || ![400, 404].includes(e.status)) throw e;
