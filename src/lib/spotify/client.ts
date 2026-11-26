@@ -18,7 +18,11 @@ export async function getAccessToken(force = false): Promise<string> {
       const res = await fetch(force ? "/api/auth/token?force=1" : "/api/auth/token", {
         cache: "no-store",
       });
-      if (res.status === 401) throw new NotAuthenticatedError("Not logged in");
+      if (res.status === 401) {
+        // Session gone or outdated (cookies were cleared server-side): back to the login screen.
+        if (typeof window !== "undefined" && window.location.pathname === "/") window.location.reload();
+        throw new NotAuthenticatedError("Not logged in");
+      }
       if (!res.ok) throw new Error(`Token endpoint failed: ${res.status}`);
       cached = await res.json();
       return cached!.accessToken;

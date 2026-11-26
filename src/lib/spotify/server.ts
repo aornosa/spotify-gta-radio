@@ -1,8 +1,10 @@
 import "server-only";
 import { cookies } from "next/headers";
 
+// The Web Playback SDK requires streaming + user-read-email + user-read-private.
 export const SCOPES = [
   "streaming",
+  "user-read-email",
   "user-read-private",
   "user-read-playback-state",
   "user-modify-playback-state",
@@ -14,6 +16,7 @@ export const COOKIE = {
   access: "sp_access",
   refresh: "sp_refresh",
   expires: "sp_expires",
+  scope: "sp_scope",
   state: "sp_oauth_state",
 } as const;
 
@@ -36,6 +39,14 @@ interface TokenResponse {
   access_token: string;
   expires_in: number;
   refresh_token?: string;
+  scope?: string;
+}
+
+/** True if a granted scope string covers everything the app currently asks for. */
+export function hasAllScopes(granted: string | undefined) {
+  if (!granted) return false;
+  const have = new Set(granted.split(/\s+/));
+  return SCOPES.split(" ").every((s) => have.has(s));
 }
 
 async function tokenRequest(params: Record<string, string>): Promise<TokenResponse> {
@@ -73,6 +84,7 @@ export async function saveTokens(t: TokenResponse) {
   if (t.refresh_token) {
     store.set(COOKIE.refresh, t.refresh_token, { ...base, maxAge: 60 * 60 * 24 * 365 });
   }
+  if (t.scope) store.set(COOKIE.scope, t.scope, { ...base, maxAge: 60 * 60 * 24 * 365 });
   return { accessToken: t.access_token, expiresAt };
 }
 

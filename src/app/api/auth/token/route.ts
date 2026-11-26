@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
-import { COOKIE, clearTokens, refreshAccessToken, saveTokens } from "@/lib/spotify/server";
+import { COOKIE, clearTokens, hasAllScopes, refreshAccessToken, saveTokens } from "@/lib/spotify/server";
 
 /**
  * Returns a valid access token for the browser (Web Playback SDK + Web API), refreshing
@@ -12,6 +12,12 @@ export async function GET(req: NextRequest) {
   const access = store.get(COOKIE.access)?.value;
   const expiresAt = Number(store.get(COOKIE.expires)?.value ?? 0);
   const refresh = store.get(COOKIE.refresh)?.value;
+
+  // Logins from before the app's permissions changed must log in again to grant them.
+  if (refresh && !hasAllScopes(store.get(COOKIE.scope)?.value)) {
+    await clearTokens();
+    return NextResponse.json({ error: "scopes_changed" }, { status: 401 });
+  }
 
   if (!force && access && expiresAt - Date.now() > 60_000) {
     return NextResponse.json({ accessToken: access, expiresAt });
