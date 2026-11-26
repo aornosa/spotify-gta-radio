@@ -20,11 +20,16 @@ export const COOKIE = {
 export function env() {
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-  const redirectUri = process.env.SPOTIFY_REDIRECT_URI;
-  if (!clientId || !clientSecret || !redirectUri) {
-    throw new Error("Missing SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET or SPOTIFY_REDIRECT_URI");
-  }
-  return { clientId, clientSecret, redirectUri };
+  if (!clientId || !clientSecret) throw new Error("Missing SPOTIFY_CLIENT_ID or SPOTIFY_CLIENT_SECRET");
+  return { clientId, clientSecret };
+}
+
+/**
+ * OAuth redirect URI: SPOTIFY_REDIRECT_URI if set, otherwise this site's own callback URL.
+ * Whatever it resolves to must be registered in the Spotify developer dashboard.
+ */
+export function redirectUriFor(origin: string) {
+  return process.env.SPOTIFY_REDIRECT_URI || `${origin}/api/auth/callback`;
 }
 
 interface TokenResponse {
@@ -48,8 +53,8 @@ async function tokenRequest(params: Record<string, string>): Promise<TokenRespon
   return res.json();
 }
 
-export function exchangeCode(code: string) {
-  return tokenRequest({ grant_type: "authorization_code", code, redirect_uri: env().redirectUri });
+export function exchangeCode(code: string, redirectUri: string) {
+  return tokenRequest({ grant_type: "authorization_code", code, redirect_uri: redirectUri });
 }
 
 export function refreshAccessToken(refreshToken: string) {

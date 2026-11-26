@@ -42,3 +42,6 @@ next-env.d.ts
 
 # local-only docs (never committed)
 *.md
+
+.vercel
+.env*

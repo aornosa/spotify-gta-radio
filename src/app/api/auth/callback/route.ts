@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
-import { COOKIE, exchangeCode, saveTokens } from "@/lib/spotify/server";
+import { COOKIE, exchangeCode, redirectUriFor, saveTokens } from "@/lib/spotify/server";
 
 export async function GET(req: NextRequest) {
   const params = req.nextUrl.searchParams;
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    await saveTokens(await exchangeCode(code));
+    await saveTokens(await exchangeCode(code, redirectUriFor(req.nextUrl.origin)));
   } catch (e) {
     console.error(e);
     home.searchParams.set("auth_error", "token_exchange_failed");
